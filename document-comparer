@@ -156,7 +156,9 @@ options_validity() {
 
 help() {
         message_for_help="$program_name
-        This program compares the documents and notifies + shows if there are any changes between them.
+        This program downloads the documents from the internet, compares them to the documents in the local storage
+        and notifies + shows the user if there are any changes between them.
+        Supported document formats are: PDF, DOCX, ODF and EPUB.
         To compare the documents, you need to supply the configuration in .yml or .yaml format.
         For example:
         
@@ -176,7 +178,11 @@ help() {
           - https://link-example3.com/download/document3.pdf
         
         Documents are downloaded in the same directory where configuration is.
-        Downloaded files in .txt format MUST remain aside from original documents for future comparisons to work."
+        Downloaded files in .txt format MUST remain aside from the original documents for future comparisons to work.
+        
+        Caveats / What doesn't work:
+          - URLs which don't have the filename in the URL are not accepted
+          - YML/YAML array syntax must be in '- arrayvalue', not in brackets '[ arrayvalue ]'"
         if [ "$number_of_options" -eq 0 ]; then
           printf '%s\n' "$message_for_help"
         else
