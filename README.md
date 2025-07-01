@@ -59,7 +59,11 @@ This program should work on any Linux & BSD-based OS-es, including MacOS, if the
 
 #### Recommended dependencies (for better UX)
 - **notify-send (Linux & BSD) / terminal-notifier (MacOS)**: for getting notifications of document changes & errors (`printf` in terminal is there if it's not available)
-- **meld**: for a nice GUI application (either in flatpak or a regular one in `PATH`) showcasing the difference between old & new version of the document (fallbacks to messy `diff` output if not available)
+- **meld**: for a nice GUI application showcasing the difference between old & new version of the document
+  Linux: flatpak is preferred if available, if not, then regular program `meld` in `PATH`.
+  BSD: regular program `meld` in `PATH`.
+  MacOS: Meld DMG package to be installed either in system's or user's `Applications` directory.
+  Fallback: messy `diff` output if none of the conditions are satisfied.
 
 ## Caveats / What doesn't work
 
