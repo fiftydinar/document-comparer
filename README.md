@@ -23,7 +23,6 @@ document-comparer /path/to/configuration1.yml /path/to/configuration2.yml
 - Documents are downloaded in the same directory where configuration is.
 - Downloaded files in `.txt` format MUST remain aside from the original documents for future comparisons to work.
 
-
 ### Configuration example
 
 Program accepts required options `title:` & `document-links:` in `.yml` & `.yaml` configuration:
@@ -38,18 +37,28 @@ document-links:
   - link2.com/file2.odt
 ```
 
-## Program dependencies
+### Automatic notification on selected time period
 
-### Required dependencies
+Due to inclusion of `notify-send` usage in the program, depending on the init & timer system, it's easy to integrate the program so Document Comparer can notify you about the changes automatically.
+
+## Program compatibility
+
+This program should work on any Linux & BSD based OS-es, if the following dependencies below are installed.  
+It should also work on MacOS, although without `notify-send` alternative to my knowledge, so it's with a bit of a degraded functionality.
+
+### Program dependencies
+
+#### Required dependencies
 - **diff**: compares the difference between old & new version of the document
 - **pdftotext**: Converts PDF documents to TXT
 - **pandoc**: Converts DOCX, ODT & EPUB documents to TXT
 - **curl**: checks the internet connection & downloads documents
 - **sed**: gets values from YML/YAML file & converts Cyrillic coded URL name to normal one.
+  It is tested that `sed` syntax in the script works with GNU, Busybox & BSD `sed`
 - **xargs**: passes the `printf` argument for the URL operation above, as POSIX shell doesn't support the argument syntax.
 - **mv**: overwrites the old document TXT with the new one.
 
-### Recommended dependencies (for better UX)
+#### Recommended dependencies (for better UX)
 - **notify-send**: for getting notifications of document changes & errors (`printf` in terminal is there if it's not available)
 - **meld**: for a nice GUI application (either in flatpak or a regular one in `PATH`) showcasing the difference between old & new version of the document (fallbacks to messy `diff` output if not available)
 
