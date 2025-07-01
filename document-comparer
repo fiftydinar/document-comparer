@@ -158,7 +158,7 @@ help() {
         message_for_help="$program_name
         This program downloads the documents from the internet, compares them to the documents in the local storage
         and notifies + shows the user if there are any changes between them.
-        Supported document formats are: PDF, DOCX, ODF and EPUB.
+        Supported document formats are: PDF, DOCX, ODT and EPUB.
         To compare the documents, you need to supply the configuration in .yml or .yaml format.
         For example:
         
