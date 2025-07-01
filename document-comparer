@@ -25,6 +25,12 @@ _notify() {
     printf '%s\n' "$@"
 }
 
+exit_if_ran_as_root() {
+    if [ $EUID -eq 0 ]; then
+      _notify "Root not allowed" "ERROR: Program runs as root, which is not allowed. Exiting the program."
+    fi
+}
+
 check_required_dependencies() {
         REQUIRED_DEPENDENCIES="
 	        diff
@@ -314,6 +320,7 @@ EOF
         fi
 }
 
+exit_if_ran_as_root
 check_required_dependencies
 base_variables "$@"
 options_validity
