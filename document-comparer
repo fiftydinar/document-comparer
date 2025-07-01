@@ -1,0 +1,291 @@
+#!/bin/sh
+
+set -eu
+
+_notify() {
+    if command -v notify-send 1> /dev/null; then
+      if [ -n "${TITLE:-""}" ]; then
+        notify-send -a "Document Comparer - $TITLE" -i folder-documents "$@"
+      else
+        notify-send -a "Document Comparer" -i folder-documents "$@"
+      fi
+    fi
+    printf '%s\n' "$@"
+}
+
+check_required_dependencies() {
+        REQUIRED_DEPENDENCIES="
+	        diff
+	        pdftotext
+	        pandoc
+	        curl
+	        sed
+	        xargs
+	        mv
+        "
+	for required_program in $REQUIRED_DEPENDENCIES; do
+		if ! command -v "$required_program" 1> /dev/null; then
+		  required_programs_available=false
+		  if [ -z "${required_programs_text:-""}" ]; then
+		    required_programs_text="$required_program"
+		  else
+		    required_programs_text="${required_programs_text} ${required_program}"
+		  fi
+		fi
+	done
+	if ! ${required_programs_available:-true}; then
+	  if [ "$required_programs_text" = "$required_program" ]; then
+	    _notify "Required dependency is missing" "ERROR: Required dependency '$required_programs_text' is missing, install it so Document Comparer can work. Exiting the program."
+	  else
+	    _notify "Required dependencies are missing" "ERROR: Required dependencies '$required_programs_text' are missing, install them so Document Comparer can work. Exiting the program."
+	  fi
+	  exit 1
+	fi
+}
+
+_dirname() {
+	[ -n "$1" ] || return 1
+	dir="$1"
+	dir=${dir%%"${dir##*[!/]}"}
+	if [ "${dir##*/*}" ]; then
+		dir=.
+	fi
+	dir=${dir%/*}
+	dir=${dir%%"${dir##*[!/]}"}
+	printf '%s\n' "${dir:-/}"
+}
+
+_basename() {
+	[ -n "$1" ] || return 1
+	dir=${1%"${1##*[!/]}"}
+	dir=${dir##*/}
+	dir=${dir%"${2:-}"} 
+	printf '%s\n' "${dir:-/}"
+}
+
+_format_supported() {
+    if [ "$ORIG_FORMAT" = "pdf" ] || [ "$ORIG_FORMAT" = "docx" ] || [ "$ORIG_FORMAT" = "odt" ] || [ "$ORIG_FORMAT" = "epub" ]; then
+      return 0
+    else
+      return 1
+    fi
+}
+# Used for notification for supported document formats
+supported_formats="'pdf', 'docx', 'odt' and 'epub'"
+
+_convert_document() {
+    if [ "$ORIG_FORMAT" = "pdf" ]; then
+      # Silence unharming syntax errors
+      pdftotext "$1" "$2" 2> /dev/null
+    elif [ "$ORIG_FORMAT" = "docx" ] || [ "$ORIG_FORMAT" = "odt" ] || [ "$ORIG_FORMAT" = "epub" ]; then
+      pandoc "$1" -o "$2"
+    fi
+}
+
+_check_internet_connection() {
+    max_tries=3
+    waiting_time=2
+    try=1
+
+    while [ $try -lt $max_tries ]; do
+        if curl -s -f -I "https://fedoraproject.org/static/hotspot.txt" 1> /dev/null; then
+          return 0
+        else
+          printf '%s\n' "Internet connection is not available. Waiting..."
+          sleep $waiting_time
+          try=$((try + 1))
+        fi
+    done
+
+    return 1
+}
+
+_yaml_get_key() {
+    VALUE_NAME="$1"
+    FILE_NAME="$2"
+    sed -n "s/^$VALUE_NAME: //p" "$FILE_NAME" | sed 's/^[ \t]*//;s/[ \t]*$//;s/"//g'
+}
+
+# In 1st 'sed' command, expression must be under single quotes, that's why it's manually set as 'document-links' instead of VALUE_NAME
+_yaml_get_array() {
+    FILE_NAME="$1"
+    sed -n '/^document-links:/,/^[^ ]/{ /^[^ ]/!p; }' "$FILE_NAME" | sed 's/^[[:space:]]*- //; s/[[:space:]]*//g' | sed '/^#/d'
+}
+
+_run_diff_program() {
+    if command -v flatpak 1> /dev/null; then
+      if [ "$(flatpak list --app --columns=application | sed -n '/org\.gnome\.meld/p')" = "org.gnome.meld" ]; then
+        flatpak run org.gnome.meld "$@"
+      elif command -v meld 1> /dev/null; then
+        meld "$@"
+      else
+        diff "$@"
+      fi
+    elif command -v meld 1> /dev/null; then
+      meld "$@"
+    else
+      diff "$@"
+    fi
+}
+
+base_variables() {
+    number_of_options=$#
+    all_options="$(printf '%s\n' "$@")"
+    first_option="${1:-""}"
+    if command -v "$(_basename "$0")" 1> /dev/null; then
+      program_location="$(_basename "$0")"
+    else
+      program_location="$0"
+    fi
+    program_name="document-comparer"
+}
+
+options_validity() {
+       if [ -n "$first_option" ]; then
+         case "$first_option" in
+            --help|help|-h|*.yml|*.yaml)
+                 return 0
+                 ;;
+            *)
+                _notify "Invalid option" "ERROR: This is an invalid option for $program_name. Execute $program_location in terminal to see all available options. Exiting the program."
+                exit 1
+                 ;;
+          esac
+        fi
+}
+
+help() {
+        message_for_help="$program_name
+        This program compares the documents and notifies + shows if there are any changes between them.
+        To compare the documents, you need to supply the configuration in .yml or .yaml format.
+        For example:
+        
+        $program_location /path/to/configuration.yml
+        $program_location /path/to/configuration1.yml /path/to/configuration2.yml
+        
+        Program accepts required options 'title:' and 'document-links:' in .yml & .yaml configuration.
+          - title: serves as a general description of the document types which are being compared, so it's easier to differentiate in case of more configurations
+          - document-links: serves as an URL list of documents which are going to be compared
+        
+        For example, this is how a valid configuration looks like:
+        
+        title: Work stuff
+        document-links:
+          - https://link-example1.com/download/document1.pdf
+          - https://link-example2.com/download/document2.pdf
+          - https://link-example3.com/download/document3.pdf
+        
+        Documents are downloaded in the same directory where configuration is.
+        Downloaded files in .txt format MUST remain aside from original documents for future comparisons to work."
+        if [ "$number_of_options" -eq 0 ]; then
+          printf '%s\n' "$message_for_help"
+        else
+          case "$first_option" in
+             --help|help|-h)
+                  printf '%s\n' "$message_for_help"
+                  ;;
+          esac
+        fi
+}
+
+check_configuration_availability() {
+        if [ $number_of_options -gt 0 ]; then
+          while IFS='' read -r option; do
+            case "$option" in
+               *.yml|*.yaml)
+                   CONFIGURATION="$option"
+                   if [ ! -f "$CONFIGURATION" ]; then
+                     configuration_available=false
+                     if [ -z "${configuration_text:-""}" ]; then
+                       configuration_text="$CONFIGURATION"
+                     else
+                       configuration_text="${configuration_text} ${CONFIGURATION}"
+                     fi
+                   fi
+            esac
+          done <<EOF
+$all_options
+EOF
+        fi
+        if ! ${configuration_available:-true}; then
+          if [ "$configuration_text" = "$CONFIGURATION" ]; then
+            _notify "Non-existing configuration" "ERROR: Configuration '$configuration_text' doesn't exist. Check if you wrote the name or path to the configuration correctly. Exiting the program."
+          else
+            _notify "Non-existing configurations" "ERROR: Configurations '$configuration_text' don't exist. Check if you wrote the name or path to those configurations correctly. Exiting the program."
+          fi
+          exit 1
+        fi
+}
+
+compare_documents() {
+        if [ $number_of_options -gt 0 ]; then
+          while IFS='' read -r option; do
+            case "$option" in
+               *.yml|*.yaml)
+                   CONFIGURATION="$option"
+                   if [ -f "$CONFIGURATION" ]; then
+                     DOWNLOAD_DIR="$(_dirname "$CONFIGURATION")"
+                     TITLE="$(_yaml_get_key title "$CONFIGURATION")"
+                     DOCUMENT_LINKS="$(_yaml_get_array "$CONFIGURATION")"
+                     for link in $DOCUMENT_LINKS; do
+                       DOCUMENT_NAME_BASE="$(_basename "$link")"
+                       WHOLE_DOCUMENT_NAME="$(printf '%s' "$DOCUMENT_NAME_BASE" | sed 's/%/\\x/g' | xargs -0 printf "%b")"
+                       DOCUMENT_NAME="${WHOLE_DOCUMENT_NAME%%.*}"
+                       ORIG_FORMAT="${WHOLE_DOCUMENT_NAME##*.}"
+                       if [ -f "$DOWNLOAD_DIR/$DOCUMENT_NAME.txt" ]; then
+                         printf '%s\n' "Document '$DOCUMENT_NAME' already exists, I'll compare it with the newer version of the document"
+                       fi
+                       if _format_supported; then
+                         if ! _check_internet_connection; then
+                           _notify "Internet unavailable" "Internet connection is not available, which is needed for downloading documents."
+                         fi
+                         printf '%s\n' "Downloading document '$DOCUMENT_NAME' in '$ORIG_FORMAT' format"
+                         printf '%s\n' "URL: $link"
+                         if curl -f -L -s "$link" -o "$DOWNLOAD_DIR/$WHOLE_DOCUMENT_NAME"; then
+                           printf '%s\n' "Successfully downloaded document '$DOCUMENT_NAME' in '$ORIG_FORMAT' format."
+                         else
+                           _notify "Unsuccessful download" "ERROR: Unsucessful download of document '$DOCUMENT_NAME' in '$ORIG_FORMAT' format. Skipping this document."
+                           printf '%s\n' ""
+                           continue
+                         fi
+                         if [ -f "$DOWNLOAD_DIR/$DOCUMENT_NAME.txt" ]; then
+                           printf '%s\n' "Converting '$DOCUMENT_NAME' from '$ORIG_FORMAT' to 'txt' format"
+                           _convert_document "$DOWNLOAD_DIR/$WHOLE_DOCUMENT_NAME" "$DOWNLOAD_DIR/${DOCUMENT_NAME}_new.txt"
+                           if [ -n "$(diff "$DOWNLOAD_DIR/$DOCUMENT_NAME.txt" "$DOWNLOAD_DIR/${DOCUMENT_NAME}_new.txt")" ]; then
+                             diff_in_documents=true
+                             _notify "There is a diff in documents" "There is a difference between old and new document '$DOCUMENT_NAME'. Comparison will be shown in application for comparing documents, which will open now."
+                             _run_diff_program "$DOWNLOAD_DIR/$DOCUMENT_NAME.txt" "$DOWNLOAD_DIR/${DOCUMENT_NAME}_new.txt"
+                           else
+                             printf '%s\n' "There is no difference between old and new document '$DOCUMENT_NAME'"
+                           fi
+                           printf '%s\n' "Deleting old document '$DOCUMENT_NAME'"
+                           mv "$DOWNLOAD_DIR/${DOCUMENT_NAME}_new.txt" "$DOWNLOAD_DIR/$DOCUMENT_NAME.txt"
+                           printf '%s\n' ""
+                         else
+                           printf '%s\n' "Converting '$DOCUMENT_NAME' from '$ORIG_FORMAT' to 'txt' format"
+                           _convert_document "$DOWNLOAD_DIR/$WHOLE_DOCUMENT_NAME" "$DOWNLOAD_DIR/${DOCUMENT_NAME}.txt"
+                           printf '%s\n' ""
+                         fi
+                       else
+                         _notify "Document format is not supported" "ERROR: This document '$DOCUMENT_NAME' in '$ORIG_FORMAT' format is not supported for converting. Supported formats are: $supported_formats. Skipping this document."
+                         printf '%s\n' ""
+                         continue
+                       fi
+                     done
+                     if ! ${diff_in_documents:-false}; then
+                       _notify "There is no difference in documents"
+                     fi
+                   fi
+            esac
+          done <<EOF
+$all_options
+EOF
+        fi
+}
+
+check_required_dependencies
+base_variables "$@"
+options_validity
+help
+check_configuration_availability
+compare_documents
