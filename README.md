@@ -43,7 +43,7 @@ Due to inclusion of `notify-send` usage in the program, depending on the init & 
 
 ## Program compatibility
 
-This program should work on any Linux, BSD based OS-es, including MacOS, if the following dependencies below are installed.
+This program should work on any Linux & BSD-based OS-es, including MacOS, if the following dependencies below are installed.
 
 ### Program dependencies
 
@@ -53,7 +53,7 @@ This program should work on any Linux, BSD based OS-es, including MacOS, if the 
 - **pandoc**: Converts DOCX, ODT & EPUB documents to TXT
 - **curl**: checks the internet connection & downloads documents
 - **sed**: gets values from YML/YAML file & converts Cyrillic coded URL name to normal one.
-  It is tested that `sed` syntax in the script works with GNU, Busybox & BSD `sed`
+  It is tested that `sed` syntax in the program works with GNU, Busybox & BSD's `sed`
 - **xargs**: passes the `printf` argument for the URL operation above, as POSIX shell doesn't support the argument syntax.
 - **mv**: overwrites the old document TXT with the new one.
 
