@@ -3,11 +3,23 @@
 set -eu
 
 _notify() {
-    if command -v notify-send 1> /dev/null; then
-      if [ -n "${TITLE:-""}" ]; then
-        notify-send -a "Document Comparer - $TITLE" -i folder-documents "$@"
-      else
-        notify-send -a "Document Comparer" -i folder-documents "$@"
+    # MacOS check
+    if [ -f "/System/Library/CoreServices/SystemVersion.plist" ]; then
+      if command -v terminal-notifier 1> /dev/null; then
+        if [ -n "${TITLE:-""}" ]; then
+          terminal-notifier -title "Document Comparer - $TITLE" -subtitle "$1" -message "$2"
+        else
+          terminal-notifier -title "Document Comparer" -subtitle "$1" -message "$2"
+        fi
+      fi
+    # Linux check
+    else
+      if command -v notify-send 1> /dev/null; then
+        if [ -n "${TITLE:-""}" ]; then
+          notify-send -a "Document Comparer - $TITLE" -i folder-documents "$@"
+        else
+          notify-send -a "Document Comparer" -i folder-documents "$@"
+        fi
       fi
     fi
     printf '%s\n' "$@"
@@ -113,19 +125,32 @@ _yaml_get_array() {
 }
 
 _run_diff_program() {
-    if command -v flatpak 1> /dev/null; then
-      if [ "$(flatpak list --app --columns=application | sed -n '/org\.gnome\.meld/p')" = "org.gnome.meld" ]; then
-        flatpak run org.gnome.meld "$@"
+    # MacOS check
+    if [ -f "/System/Library/CoreServices/SystemVersion.plist" ]; then
+      if [ -d "/Applications/Meld.app" ]; then
+        if command -v open 1> /dev/null; then
+          open -a Meld.app --args "$@"
+        else
+          diff "$@"
+        fi
+      else
+        diff "$@"
+      fi
+    # Linux check
+    else
+      if command -v flatpak 1> /dev/null; then
+        if [ "$(flatpak list --app --columns=application | sed -n '/org\.gnome\.meld/p')" = "org.gnome.meld" ]; then
+          flatpak run org.gnome.meld "$@"
+        elif command -v meld 1> /dev/null; then
+          meld "$@"
+        else
+          diff "$@"
+        fi
       elif command -v meld 1> /dev/null; then
         meld "$@"
       else
         diff "$@"
       fi
-    elif command -v meld 1> /dev/null; then
-      meld "$@"
-    else
-      diff "$@"
-    fi
 }
 
 base_variables() {
