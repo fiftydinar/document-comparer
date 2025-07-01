@@ -12,7 +12,7 @@ _notify() {
           terminal-notifier -title "Document Comparer" -subtitle "$1" -message "$2"
         fi
       fi
-    # Linux check
+    # Linux / BSD check
     else
       if command -v notify-send 1> /dev/null; then
         if [ -n "${TITLE:-""}" ]; then
@@ -127,7 +127,7 @@ _yaml_get_array() {
 _run_diff_program() {
     # MacOS check
     if [ -f "/System/Library/CoreServices/SystemVersion.plist" ]; then
-      if [ -d "/Applications/Meld.app" ]; then
+      if [ -d "/Applications/Meld.app" ] || [ -d "$HOME/Applications/Meld.app" ]; then
         if command -v open 1> /dev/null; then
           open -a Meld.app --args "$@"
         else
@@ -136,7 +136,7 @@ _run_diff_program() {
       else
         diff "$@"
       fi
-    # Linux check
+    # Linux / BSD check
     else
       if command -v flatpak 1> /dev/null; then
         if [ "$(flatpak list --app --columns=application | sed -n '/org\.gnome\.meld/p')" = "org.gnome.meld" ]; then
