@@ -58,7 +58,8 @@ This program should work on any Linux & BSD-based OS-es, including MacOS, if the
 - **mv**: overwrites the old document TXT with the new one.
 
 #### Recommended dependencies (for better UX)
-- **notify-send (Linux & BSD) / terminal-notifier (MacOS)**: for getting notifications of document changes & errors (`printf` in terminal is there if it's not available)
+- **notify-send (Linux & BSD) / terminal-notifier (MacOS)**: for getting notifications of document changes & errors
+  - **Fallback**: `printf` in terminal
 - **meld**: for a nice GUI application showcasing the difference between old & new version of the document
   - **Linux**: flatpak is preferred if available, if not, then regular program `meld` in `PATH`.
   - **BSD**: regular program `meld` in `PATH`.
