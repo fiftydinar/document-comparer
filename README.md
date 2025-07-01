@@ -48,7 +48,7 @@ This program should work on any Linux & BSD-based OS-es, including MacOS, if the
 ### Program dependencies
 
 #### Required dependencies
-- **id**: checks if program is ran as root
+- **id**: checks if the program is ran as root
 - **diff**: compares the difference between old & new version of the document
 - **pdftotext**: Converts PDF documents to TXT
 - **pandoc**: Converts DOCX, ODT & EPUB documents to TXT
