@@ -52,7 +52,7 @@ This program should work on any Linux & BSD-based OS-es, including MacOS, if the
 - **pdftotext**: Converts PDF documents to TXT
 - **pandoc**: Converts DOCX, ODT & EPUB documents to TXT
 - **curl**: checks the internet connection & downloads documents
-- **sed**: gets values from YML/YAML file & converts Cyrillic coded URL name to normal one.
+- **sed**: gets values from YML/YAML file & converts Cyrillic coded URL name to normal one.  
   It is tested that `sed` syntax in the program works with GNU, Busybox & BSD's `sed`
 - **xargs**: passes the `printf` argument for the URL operation above, as POSIX shell doesn't support the argument syntax.
 - **mv**: overwrites the old document TXT with the new one.
