@@ -26,8 +26,9 @@ _notify() {
 }
 
 exit_if_ran_as_root() {
-    if [ $EUID -eq 0 ]; then
-      _notify "Root not allowed" "ERROR: Program runs as root, which is not allowed. Exiting the program."
+    if [ $(id -u) -eq 0 ]; then
+      printf '%s\n' "ERROR: Program runs as root, which is not allowed. Exiting the program."
+      exit 1
     fi
 }
 
@@ -157,6 +158,7 @@ _run_diff_program() {
       else
         diff "$@"
       fi
+    fi
 }
 
 base_variables() {
