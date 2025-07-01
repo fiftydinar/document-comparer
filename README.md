@@ -66,6 +66,9 @@ This program should work on any Linux & BSD-based OS-es, including MacOS, if the
   - **BSD**: regular program `meld` in `PATH`.
   - **MacOS**: Meld DMG package to be installed either in system's or user's `Applications` directory.
   - **Fallback**: messy `diff` output if none of the conditions are satisfied.
+- **open (MacOS)**: Used for opening GUI applications.
+
+Most of these dependencies are installed by default in all those OS-es except `meld`, `pdftotext` & `pandoc`.
 
 ## Caveats / What doesn't work
 
