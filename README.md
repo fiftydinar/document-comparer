@@ -39,7 +39,7 @@ document-links:
 
 ### Automatic notification on selected time period
 
-Due to inclusion of `notify-send` usage in the program, depending on the init & timer system, it's easy to integrate the program so Document Comparer can notify you about the changes automatically.
+Due to inclusion of `notify-send` / `terminal-notifier` usage in the program, depending on the init & timer system, it's easy to integrate the program so Document Comparer can notify you about the changes automatically.
 
 ## Program compatibility
 
