@@ -68,7 +68,7 @@ This program should work on any Linux & BSD-based OS-es, including MacOS, if the
   - **Fallback**: messy `diff` output if none of the conditions are satisfied.
 - **open (MacOS)**: Used for opening GUI applications (in this case Meld).
 
-Most of these dependencies are installed by default in all those OS-es except `meld`, `pdftotext` & `pandoc`.
+Most of these dependencies are installed by default in all those OS-es except `meld`, `pdftotext` & `pandoc`. Additionally, for MacOS, `terminal-notifier` is likely not installed by default.
 
 ## Caveats / What doesn't work
 
