@@ -48,20 +48,20 @@ This program should work on any Linux & BSD-based OS-es, including MacOS, if the
 ### Program dependencies
 
 #### Required dependencies
-- **id**: checks if the program is ran as root
-- **diff**: compares the difference between old & new version of the document
-- **pdftotext**: Converts PDF documents to TXT
-- **pandoc**: Converts DOCX, ODT & EPUB documents to TXT
-- **curl**: checks the internet connection & downloads documents
-- **sed**: gets values from YML/YAML file & converts Cyrillic coded URL name to normal one.  
-  It is tested that `sed`'s syntax in the program works with GNU, Busybox & BSD's `sed`
+- **id**: checks if the program is ran as root.
+- **diff**: compares the difference between old & new version of the document.
+- **pdftotext**: Converts PDF documents to TXT.
+- **pandoc**: Converts DOCX, ODT & EPUB documents to TXT.
+- **curl**: checks the internet connection & downloads documents.
+- **sed**: gets values from YML/YAML file, converts Cyrillic/whitespace coded URL filename to normal one & is used for checking if flatpak Meld is installed on Linux.  
+  It is tested that `sed`'s syntax in the program works with GNU, Busybox & BSD's `sed`.
 - **xargs**: passes the `printf` argument for the URL operation above, as POSIX shell doesn't support the argument syntax.
 - **mv**: overwrites the old document TXT with the new one.
 
 #### Recommended dependencies (for better UX)
-- **notify-send (Linux & BSD) / terminal-notifier (MacOS)**: for getting notifications of document changes & errors
-  - **Fallback**: `printf` in terminal
-- **meld**: for a nice GUI application showcasing the difference between old & new version of the document
+- **notify-send (Linux & BSD) / terminal-notifier (MacOS)**: for getting notifications of document changes & errors.
+  - **Fallback**: `printf` in terminal.
+- **meld**: for a nice GUI application showcasing the difference between old & new version of the document.
   - **Linux**: flatpak is preferred if available, if not, then regular program `meld` in `PATH`.
   - **BSD**: regular program `meld` in `PATH`.
   - **MacOS**: Meld DMG package to be installed either in system's or user's `Applications` directory.
