@@ -62,7 +62,7 @@ check_required_dependencies() {
 	fi
 }
 
-dirname() {
+_dirname() {
     [ -n "$1" ] || return 1
     if [ "$1" = "--" ] && [ -z "$2" ]; then
       return 1
@@ -88,7 +88,7 @@ dirname() {
     fi
 }
 
-basename() {
+_basename() {
     [ -n "$1" ] || return 1
     if [ "$1" = "--" ] && [ -z "$2" ]; then
         return 1
